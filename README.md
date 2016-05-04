@@ -1,0 +1,2 @@
+QGIS Clip Directory Plugin
+==========================
