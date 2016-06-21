@@ -207,7 +207,8 @@ class ClipDirectoryPlugin:
                     return None
 
     def run(self):
-        # populate the Combo Box with the layers loaded in QGIS
+	"""Run method that performs all the real work"""
+        # populate the Combo Box with the layers loaded in QGIS (used as clip layer)
         self.dlg.comboBox.clear()
         layers = self.iface.legendInterface().layers()
         layer_list = []
@@ -215,18 +216,17 @@ class ClipDirectoryPlugin:
             layer_list.append(layer.name())
         self.dlg.comboBox.addItems(layer_list)
 
-	"""Run method that performs all the real work"""
         # show the dialog
         self.dlg.show()
         # Run the dialog event loop
         result = self.dlg.exec_()
         # See if OK was pressed
         if result:
-            # Do something useful here - delete the line containing pass and
-            # substitute with your code.
-
+            ### TODO: pridat komentare
             cesta = self.dlg.lineEdit.text()
 
+            ### TODO: otestovat, zda cesta nekonci na lomitko (ci zpetne lomitko)
+            ### TODO: otestovat, zda je cesta existujici adresar
             clip_cesta = cesta + "_clipped"
             
             if not os.path.exists(clip_cesta):
@@ -239,32 +239,18 @@ class ClipDirectoryPlugin:
 
             soubory_shp = []            
             for file_item in soubory:
+                ### TODO: os.path.splitext()[1]
                 if file_item[len(file_item) - 4:len(file_item)] == ".shp":
-                    cela_cesta = cesta + "/" + file_item
+                    cela_cesta = cesta + "/" + file_item ### TODO: / -> os.path.sep
                     soubory_shp.append(cela_cesta)
                     
             layers = []
             for cesta in soubory_shp:
-                nazev_souboru = ntpath.basename(cesta)
+                nazev_souboru = ntpath.basename(cesta) ### ntpath -> os.path.basename
                 layer = QgsVectorLayer(cesta, "nazev", "ogr")
                 layers.append(layer)
-                vystupni_nazev = clip_cesta + "/" + nazev_souboru[0:len(nazev_souboru)-4] + "_clip.shp"
+                vystupni_nazev = clip_cesta + "/" + nazev_souboru[0:len(nazev_souboru)-4] + "_clip.shp" ### TODO: prepsat
                 processing.runalg("qgis:clip", layer, clip_layer, vystupni_nazev)
                 if self.dlg.checkBox.isChecked():
                     loading_name = nazev_souboru[0:len(nazev_souboru)-4] + "_clip"
                     iface.addVectorLayer(vystupni_nazev, loading_name, "ogr")
-                    
-            
- 
-            pass
-
-
-
-
-
-
-
-
-
-
-
