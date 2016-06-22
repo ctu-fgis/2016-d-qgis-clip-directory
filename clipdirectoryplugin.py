@@ -10,7 +10,6 @@
         copyright            : (C) 2016 by Jan Zacharias
         email                : jan.zacharias@seznam.cz
  ***************************************************************************/
-
 /***************************************************************************
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -43,7 +42,6 @@ class ClipDirectoryPlugin:
 
     def __init__(self, iface):
         """Constructor.
-
         :param iface: An interface instance that will be passed to this class
             which provides the hook by which you can manipulate the QGIS
             application at run time.
@@ -85,12 +83,9 @@ class ClipDirectoryPlugin:
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
-
         We implement this ourselves since we do not inherit QObject.
-
         :param message: String for translation.
         :type message: str, QString
-
         :returns: Translated version of message.
         :rtype: QString
         """
@@ -110,39 +105,29 @@ class ClipDirectoryPlugin:
         whats_this=None,
         parent=None):
         """Add a toolbar icon to the toolbar.
-
         :param icon_path: Path to the icon for this action. Can be a resource
             path (e.g. ':/plugins/foo/bar.png') or a normal file system path.
         :type icon_path: str
-
         :param text: Text that should be shown in menu items for this action.
         :type text: str
-
         :param callback: Function to be called when the action is triggered.
         :type callback: function
-
         :param enabled_flag: A flag indicating if the action should be enabled
             by default. Defaults to True.
         :type enabled_flag: bool
-
         :param add_to_menu: Flag indicating whether the action should also
             be added to the menu. Defaults to True.
         :type add_to_menu: bool
-
         :param add_to_toolbar: Flag indicating whether the action should also
             be added to the toolbar. Defaults to True.
         :type add_to_toolbar: bool
-
         :param status_tip: Optional text to show in a popup when mouse pointer
             hovers over the action.
         :type status_tip: str
-
         :param parent: Parent widget for the new action. Defaults None.
         :type parent: QWidget
-
         :param whats_this: Optional text to show in the status bar when the
             mouse pointer hovers over the action.
-
         :returns: The action that was created. Note that the action is also
             added to self.actions list.
         :rtype: QAction
@@ -194,7 +179,7 @@ class ClipDirectoryPlugin:
 
     
     def select_output_dir(self):
-        self.dirname = QFileDialog.getExistingDirectory(self.dlg, "Select directory ","home/user/Desktop")
+        self.dirname = QFileDialog.getExistingDirectory(self.dlg, "Select directory ","E:\janza\Documents\skola\GIS\data\test")
         self.dlg.lineEdit.setText(self.dirname)
     
     def getVectorLayerByName(self, layerName):
@@ -223,34 +208,48 @@ class ClipDirectoryPlugin:
         # See if OK was pressed
         if result:
             ### TODO: pridat komentare
-            cesta = self.dlg.lineEdit.text()
+            path = self.dlg.lineEdit.text()
 
-            ### TODO: otestovat, zda cesta nekonci na lomitko (ci zpetne lomitko)
             ### TODO: otestovat, zda je cesta existujici adresar
-            clip_cesta = cesta + "_clipped"
-            
-            if not os.path.exists(clip_cesta):
-                os.makedirs(clip_cesta)  
-                        
-            soubory = [f for f in listdir(cesta) if isfile(join(cesta, f))]
+            ### poznámka: nevím jak proces stopnout, zobrazit dialog s varováním a po odklinutí znovu načíst plugin
+            #if not os.path.exists(path):
+                #msg = QMessageBox()
+                #msg.setText("Directory does not exist!")
+                #msg.setIcon(QMessageBox.Warning)
+                #msg.show()
+
+            ### test, zda cesta nekonci na lomitko (ci zpetne lomitko)
+            if path.endswith('/') or path.endswith('\\') :
+                path = path[0:len(path)-1]
+
+            clip_path = path + "_clipped"
+
+            if not os.path.exists(clip_path):
+                os.makedirs(clip_path)
 
             clip_name = self.dlg.comboBox.currentText()
-            clip_layer = self.getVectorLayerByName(clip_name) 
+            clip_layer = self.getVectorLayerByName(clip_name)
 
-            soubory_shp = []            
-            for file_item in soubory:
-                ### TODO: os.path.splitext()[1]
-                if file_item[len(file_item) - 4:len(file_item)] == ".shp":
-                    cela_cesta = cesta + "/" + file_item ### TODO: / -> os.path.sep
-                    soubory_shp.append(cela_cesta)
-                    
+            files = [f for f in listdir(path) if isfile(join(path, f))]
+            
+            files_shp = []            
+            for file_item in files:
+                extension = os.path.splitext(file_item)                
+                if extension[1] == ".shp":
+                    absolute_path = os.path.join(path, file_item)
+                    files_shp.append(absolute_path)
+
             layers = []
-            for cesta in soubory_shp:
-                nazev_souboru = ntpath.basename(cesta) ### ntpath -> os.path.basename
-                layer = QgsVectorLayer(cesta, "nazev", "ogr")
+            for path in files_shp:
+                file_name = os.path.basename(path) 
+                name = os.path.splitext(file_name)  
+                layer = QgsVectorLayer(path, "name", "ogr")
                 layers.append(layer)
-                vystupni_nazev = clip_cesta + "/" + nazev_souboru[0:len(nazev_souboru)-4] + "_clip.shp" ### TODO: prepsat
-                processing.runalg("qgis:clip", layer, clip_layer, vystupni_nazev)
+                output_file = os.path.join(clip_path, name[0]) + "_clip.shp" 
+                processing.runalg("qgis:clip", layer, clip_layer, output_file)
                 if self.dlg.checkBox.isChecked():
-                    loading_name = nazev_souboru[0:len(nazev_souboru)-4] + "_clip"
-                    iface.addVectorLayer(vystupni_nazev, loading_name, "ogr")
+                    file_qgis_name = os.path.basename(output_file) 
+                    qgis_name = os.path.splitext(file_qgis_name)
+                    iface.addVectorLayer(output_file, qgis_name[0], "ogr")
+                    print file_qgis_name
+                    print qgis_name [0]
