@@ -207,7 +207,6 @@ class ClipDirectoryPlugin:
         result = self.dlg.exec_()
         # See if OK was pressed
         if result:
-            ### TODO: pridat komentare
             path = self.dlg.lineEdit.text()
 
             ### TODO: otestovat, zda je cesta existujici adresar
@@ -251,5 +250,3 @@ class ClipDirectoryPlugin:
                     file_qgis_name = os.path.basename(output_file) 
                     qgis_name = os.path.splitext(file_qgis_name)
                     iface.addVectorLayer(output_file, qgis_name[0], "ogr")
-                    print file_qgis_name
-                    print qgis_name [0]
