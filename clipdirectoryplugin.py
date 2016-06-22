@@ -179,7 +179,7 @@ class ClipDirectoryPlugin:
 
     
     def select_output_dir(self):
-        self.dirname = QFileDialog.getExistingDirectory(self.dlg, "Select directory ","E:\janza\Documents\skola\GIS\data\test")
+        self.dirname = QFileDialog.getExistingDirectory(self.dlg, "Select directory ","")
         self.dlg.lineEdit.setText(self.dirname)
     
     def getVectorLayerByName(self, layerName):
