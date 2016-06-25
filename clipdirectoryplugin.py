@@ -32,7 +32,7 @@ from qgis.core import QgsVectorLayer, QgsMapLayerRegistry, QgsMapLayer
 import ntpath
 import processing
 from qgis.utils import iface
-
+from qgis.gui import QgsMessageBar
 
 processing.alglist("clip")
 
@@ -211,11 +211,10 @@ class ClipDirectoryPlugin:
 
             ### TODO: otestovat, zda je cesta existujici adresar
             ### poznámka: nevím jak proces stopnout, zobrazit dialog s varováním a po odklinutí znovu načíst plugin
-            #if not os.path.exists(path):
-                #msg = QMessageBox()
-                #msg.setText("Directory does not exist!")
-                #msg.setIcon(QMessageBox.Warning)
-                #msg.show()
+            if not os.path.isdir(path):
+                iface.messageBar().pushMessage(u"Error", u"{} is not valid directory".format(path),
+                                               level=QgsMessageBar.CRITICAL, duration=5)
+                return
 
             ### test, zda cesta nekonci na lomitko (ci zpetne lomitko)
             if path.endswith('/') or path.endswith('\\') :
@@ -223,13 +222,23 @@ class ClipDirectoryPlugin:
 
             clip_path = path + "_clipped"
 
-            if not os.path.exists(clip_path):
-                os.makedirs(clip_path)
+            try:
+                if not os.path.exists(clip_path):
+                    os.makedirs(clip_path)
+            except IOError as e:
+                iface.messageBar().pushMessage(u"Error", u"{}".format(e),
+                                               level=QgsMessageBar.CRITICAL, duration=5)
+                return
 
             clip_name = self.dlg.comboBox.currentText()
             clip_layer = self.getVectorLayerByName(clip_name)
 
-            files = [f for f in listdir(path) if isfile(join(path, f))]
+            try:
+                files = [f for f in listdir(path) if isfile(join(path, f))]
+            except IOError as e:
+                iface.messageBar().pushMessage(u"Error", u"{}".format(e),
+                                               level=QgsMessageBar.CRITICAL, duration=5)
+                return
             
             files_shp = []            
             for file_item in files:
