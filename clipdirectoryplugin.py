@@ -209,8 +209,7 @@ class ClipDirectoryPlugin:
         if result:
             path = self.dlg.lineEdit.text()
 
-            ### TODO: otestovat, zda je cesta existujici adresar
-            ### poznámka: nevím jak proces stopnout, zobrazit dialog s varováním a po odklinutí znovu načíst plugin
+            ### test, zda je validní cesta k adresáři
             if not os.path.isdir(path):
                 iface.messageBar().pushMessage(u"Error", u"{} is not valid directory".format(path),
                                                level=QgsMessageBar.CRITICAL, duration=5)
